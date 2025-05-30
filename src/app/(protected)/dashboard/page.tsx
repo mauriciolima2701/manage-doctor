@@ -7,7 +7,7 @@ import { db } from "@/db";
 import { usersToClinicsTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
-import SignOutButton from "./components/sign-out-button";
+import SignOutButton from "./_components/sign-out-button";
 
 export default async function DashboardPage() {
     const session = await auth.api.getSession({
@@ -31,7 +31,7 @@ export default async function DashboardPage() {
             <h1>Dashboard</h1>
             <h1>{session?.user.name}</h1>
             <h1>{session?.user.email}</h1>
-            <Image src={session?.user?.image as string} alt="User" width={100} height={100} />
+            <Image src={session?.user?.image || '' as string} alt="User" width={100} height={100} />
             <SignOutButton />
         </div>
     )
