@@ -3,7 +3,7 @@
 import { CalendarDays, LayoutDashboard, LogOut, Stethoscope, UserRound } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -44,24 +44,10 @@ const items = [
     },
 ]
 
-function renderSidebarMenu() {
-    return (
-        items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                    <Link href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        ))
-    )
-}
-
 export function AppSidebar() {
     const router = useRouter()
     const session = authClient.useSession()
+    const pathname = usePathname()
 
     const handleSignOut = () => {
         authClient.signOut({
@@ -71,6 +57,23 @@ export function AppSidebar() {
                 }
             }
         })
+    }
+
+    function renderSidebarMenu() {
+        const isActive = (url: string) => pathname === url ? 'text-blue-500' : ''
+
+        return (
+            items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={pathname === item.url} className={isActive(item.url)}>
+                        <Link href={item.url}>
+                            <item.icon className={isActive(item.url)} />
+                            <span>{item.title}</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            ))
+        )
     }
 
     return (
