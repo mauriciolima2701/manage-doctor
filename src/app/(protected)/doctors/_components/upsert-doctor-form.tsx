@@ -1,8 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
+import { toast } from "sonner";
 import { z } from "zod";
 
+import { upsertDoctor } from "@/actions/upsert-doctor";
 import { Button } from "@/components/ui/button";
 import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -42,12 +45,12 @@ const formSchema = z
         },
     );
 
-// interface UpsertDoctorFormProps {
-//     doctor?: typeof doctorsTable.$inferSelect;
-//     onSuccess?: () => void;
-// }
+interface UpsertDoctorFormProps {
+    // doctor?: typeof doctorsTable.$inferSelect;
+    onSuccess?: () => void;
+}
 
-export function UpsertDoctorForm() {
+export function UpsertDoctorForm({ onSuccess }: UpsertDoctorFormProps) {
     const form = useForm<z.infer<typeof formSchema>>({
         shouldUnregister: true,
         resolver: zodResolver(formSchema),
@@ -62,8 +65,23 @@ export function UpsertDoctorForm() {
         },
     });
 
-    function onSubmit(data: z.infer<typeof formSchema>) {
-        console.log(data);
+    const upsertDoctorAction = useAction(upsertDoctor, {
+        onSuccess: () => {
+            toast.success("Médico adicionado com sucesso.")
+            onSuccess?.();
+        },
+        onError: () => {
+            toast.error("Erro ao adicionar médico.")
+        },
+    });
+
+    function onSubmit(values: z.infer<typeof formSchema>) {
+        upsertDoctorAction.execute({
+            ...values,
+            availableFromWeekDay: parseInt(values.availableFromWeekDay),
+            availableToWeekDay: parseInt(values.availableToWeekDay),
+            appointmentPriceInCents: values.appointmentPrice * 100,
+        });
     }
 
     return (
@@ -330,8 +348,10 @@ export function UpsertDoctorForm() {
                         )}
                     />
                     <DialogFooter>
-                        <Button type="submit">
-                            Adicionar
+                        <Button type="submit" disabled={upsertDoctorAction.isExecuting} >
+                            {upsertDoctorAction.isPending
+                                ? "Salvando..."
+                                : "Adicionar"}
                         </Button>
                     </DialogFooter>
                 </form>
