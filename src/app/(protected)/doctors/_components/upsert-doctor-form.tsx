@@ -7,10 +7,32 @@ import { z } from "zod";
 
 import { upsertDoctor } from "@/actions/upsert-doctor";
 import { Button } from "@/components/ui/button";
-import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { doctorsTable } from "@/db/schema";
 
 import { medicalSpecialties } from "../_constants";
 
@@ -46,70 +68,81 @@ const formSchema = z
     );
 
 interface UpsertDoctorFormProps {
-    // doctor?: typeof doctorsTable.$inferSelect;
+    doctor?: typeof doctorsTable.$inferSelect;
     onSuccess?: () => void;
 }
 
-export function UpsertDoctorForm({ onSuccess }: UpsertDoctorFormProps) {
+export function UpsertDoctorForm({ doctor, onSuccess }: UpsertDoctorFormProps) {
     const form = useForm<z.infer<typeof formSchema>>({
         shouldUnregister: true,
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name: "",
-            specialty: "",
-            appointmentPrice: 0,
-            availableFromWeekDay: "1",
-            availableToWeekDay: "5",
-            availableFromTime: "",
-            availableToTime: "",
+            name: doctor?.name ?? "",
+            specialty: doctor?.specialty ?? "",
+            appointmentPrice: doctor?.appointmentPriceInCents
+                ? doctor.appointmentPriceInCents / 100
+                : 0,
+            availableFromWeekDay: doctor?.availableFromWeekDay?.toString() ?? "1",
+            availableToWeekDay: doctor?.availableToWeekDay?.toString() ?? "5",
+            availableFromTime: doctor?.availableFromTime ?? "",
+            availableToTime: doctor?.availableToTime ?? "",
         },
     });
-
     const upsertDoctorAction = useAction(upsertDoctor, {
         onSuccess: () => {
-            toast.success("Médico adicionado com sucesso.")
+            toast.success("Médico adicionado com sucesso.");
             onSuccess?.();
         },
         onError: () => {
-            toast.error("Erro ao adicionar médico.")
+            toast.error("Erro ao adicionar médico.");
         },
     });
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    const onSubmit = (values: z.infer<typeof formSchema>) => {
         upsertDoctorAction.execute({
             ...values,
+            id: doctor?.id,
             availableFromWeekDay: parseInt(values.availableFromWeekDay),
             availableToWeekDay: parseInt(values.availableToWeekDay),
             appointmentPriceInCents: values.appointmentPrice * 100,
         });
-    }
+    };
 
     return (
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Adicionar médico</DialogTitle>
+                <DialogTitle>{doctor ? doctor.name : "Adicionar médico"}</DialogTitle>
                 <DialogDescription>
-                    Adicione um novo médico.
+                    {doctor
+                        ? "Edite as informações desse médico."
+                        : "Adicione um novo médico."}
                 </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    <FormField control={form.control} name="name" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Nome</FormLabel>
-                            <FormControl>
-                                <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Nome</FormLabel>
+                                <FormControl>
+                                    <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                     <FormField
                         control={form.control}
                         name="specialty"
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Especialidade</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                >
                                     <FormControl>
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Selecione uma especialidade" />
@@ -188,7 +221,7 @@ export function UpsertDoctorForm({ onSuccess }: UpsertDoctorFormProps) {
                                 <FormLabel>Dia final de disponibilidade</FormLabel>
                                 <Select
                                     onValueChange={field.onChange}
-                                    defaultValue={field.value}
+                                    defaultValue={field.value?.toString()}
                                 >
                                     <FormControl>
                                         <SelectTrigger className="w-full">
@@ -226,7 +259,7 @@ export function UpsertDoctorForm({ onSuccess }: UpsertDoctorFormProps) {
                                     </FormControl>
                                     <SelectContent>
                                         <SelectGroup>
-                                            <SelectLabel className="border-b">Manhã</SelectLabel>
+                                            <SelectLabel>Manhã</SelectLabel>
                                             <SelectItem value="05:00:00">05:00</SelectItem>
                                             <SelectItem value="05:30:00">05:30</SelectItem>
                                             <SelectItem value="06:00:00">06:00</SelectItem>
@@ -245,7 +278,7 @@ export function UpsertDoctorForm({ onSuccess }: UpsertDoctorFormProps) {
                                             <SelectItem value="12:30:00">12:30</SelectItem>
                                         </SelectGroup>
                                         <SelectGroup>
-                                            <SelectLabel className="border-b">Tarde</SelectLabel>
+                                            <SelectLabel>Tarde</SelectLabel>
                                             <SelectItem value="13:00:00">13:00</SelectItem>
                                             <SelectItem value="13:30:00">13:30</SelectItem>
                                             <SelectItem value="14:00:00">14:00</SelectItem>
@@ -260,7 +293,7 @@ export function UpsertDoctorForm({ onSuccess }: UpsertDoctorFormProps) {
                                             <SelectItem value="18:30:00">18:30</SelectItem>
                                         </SelectGroup>
                                         <SelectGroup>
-                                            <SelectLabel className="border-b">Noite</SelectLabel>
+                                            <SelectLabel>Noite</SelectLabel>
                                             <SelectItem value="19:00:00">19:00</SelectItem>
                                             <SelectItem value="19:30:00">19:30</SelectItem>
                                             <SelectItem value="20:00:00">20:00</SelectItem>
@@ -295,7 +328,7 @@ export function UpsertDoctorForm({ onSuccess }: UpsertDoctorFormProps) {
                                     </FormControl>
                                     <SelectContent>
                                         <SelectGroup>
-                                            <SelectLabel className="border-b">Manhã</SelectLabel>
+                                            <SelectLabel>Manhã</SelectLabel>
                                             <SelectItem value="05:00:00">05:00</SelectItem>
                                             <SelectItem value="05:30:00">05:30</SelectItem>
                                             <SelectItem value="06:00:00">06:00</SelectItem>
@@ -314,7 +347,7 @@ export function UpsertDoctorForm({ onSuccess }: UpsertDoctorFormProps) {
                                             <SelectItem value="12:30:00">12:30</SelectItem>
                                         </SelectGroup>
                                         <SelectGroup>
-                                            <SelectLabel className="border-b">Tarde</SelectLabel>
+                                            <SelectLabel>Tarde</SelectLabel>
                                             <SelectItem value="13:00:00">13:00</SelectItem>
                                             <SelectItem value="13:30:00">13:30</SelectItem>
                                             <SelectItem value="14:00:00">14:00</SelectItem>
@@ -329,7 +362,7 @@ export function UpsertDoctorForm({ onSuccess }: UpsertDoctorFormProps) {
                                             <SelectItem value="18:30:00">18:30</SelectItem>
                                         </SelectGroup>
                                         <SelectGroup>
-                                            <SelectLabel className="border-b">Noite</SelectLabel>
+                                            <SelectLabel>Noite</SelectLabel>
                                             <SelectItem value="19:00:00">19:00</SelectItem>
                                             <SelectItem value="19:30:00">19:30</SelectItem>
                                             <SelectItem value="20:00:00">20:00</SelectItem>
@@ -348,14 +381,18 @@ export function UpsertDoctorForm({ onSuccess }: UpsertDoctorFormProps) {
                         )}
                     />
                     <DialogFooter>
-                        <Button type="submit" disabled={upsertDoctorAction.isExecuting} >
+                        <Button type="submit" disabled={upsertDoctorAction.isPending}>
                             {upsertDoctorAction.isPending
                                 ? "Salvando..."
-                                : "Adicionar"}
+                                : doctor
+                                    ? "Salvar"
+                                    : "Adicionar"}
                         </Button>
                     </DialogFooter>
                 </form>
             </Form>
         </DialogContent>
-    )
-}
+    );
+};
+
+export default UpsertDoctorForm;
