@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { deleteDoctor } from "@/actions/delete-doctor";
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -92,7 +91,7 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
                     <DialogTrigger asChild>
                         <Button className="w-full">Ver detalhes</Button>
                     </DialogTrigger>
-                    <UpsertDoctorForm doctor={{
+                    <UpsertDoctorForm isOpen={isUpsertDoctorDialogOpen} doctor={{
                         ...doctor,
                         availableFromTime: availability.from.format("HH:mm:ss"),
                         availableToTime: availability.to.format("HH:mm:ss"),
@@ -119,9 +118,9 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteDoctorClick}>
+                            <Button onClick={handleDeleteDoctorClick} variant="destructive">
                                 Deletar
-                            </AlertDialogAction>
+                            </Button>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
