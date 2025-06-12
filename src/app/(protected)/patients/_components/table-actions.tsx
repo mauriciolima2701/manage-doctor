@@ -1,9 +1,9 @@
 import { EditIcon, MoreVerticalIcon, TrashIcon } from "lucide-react";
-// import { useAction } from "next-safe-action/hooks";
+import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 
-// import { toast } from "sonner";
-// import { deletePatient } from "@/actions/delete-patient";
+import { deletePatient } from "@/actions/delete-patient";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -37,19 +37,19 @@ interface PatientsTableActionsProps {
 export function PatientsTableActions({ patient }: PatientsTableActionsProps) {
     const [upsertDialogIsOpen, setUpsertDialogIsOpen] = useState(false);
 
-    // const deletePatientAction = useAction(deletePatient, {
-    //     onSuccess: () => {
-    //         toast.success("Paciente deletado com sucesso.");
-    //     },
-    //     onError: () => {
-    //         toast.error("Erro ao deletar paciente.");
-    //     },
-    // });
+    const deletePatientAction = useAction(deletePatient, {
+        onSuccess: () => {
+            toast.success("Paciente deletado com sucesso.");
+        },
+        onError: () => {
+            toast.error("Erro ao deletar paciente.");
+        },
+    });
 
-    // const handleDeletePatientClick = () => {
-    //     if (!patient) return;
-    //     deletePatientAction.execute({ id: patient.id });
-    // };
+    const handleDeletePatientClick = () => {
+        if (!patient) return;
+        deletePatientAction.execute({ id: patient.id });
+    };
 
     return (
         <>
@@ -86,7 +86,7 @@ export function PatientsTableActions({ patient }: PatientsTableActionsProps) {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction>
+                                    <AlertDialogAction onClick={handleDeletePatientClick}>
                                         Deletar
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
